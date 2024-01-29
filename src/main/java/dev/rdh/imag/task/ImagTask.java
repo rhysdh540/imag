@@ -36,7 +36,7 @@ public class ImagTask extends DefaultTask {
 
 	@TaskAction
 	public void run() {
-		Project project = ImagPlugin.project;
+		Project project = ImagPlugin.getProject();
 		File jar = file.get();
 		if(!jar.exists()) {
 			project.getLogger().error(jar.getName() + " does not exist");
@@ -47,7 +47,7 @@ public class ImagTask extends DefaultTask {
 
 		Directory tempDir = project.getLayout().getBuildDirectory().dir("imag/" + jar.getName()).get();
 		project.copy(spec -> {
-			spec.from(ImagPlugin.project.zipTree(jar));
+			spec.from(project.zipTree(jar));
 			spec.into(tempDir);
 		});
 

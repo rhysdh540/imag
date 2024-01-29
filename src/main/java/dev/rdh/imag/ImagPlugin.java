@@ -6,15 +6,28 @@ import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 import org.gradle.api.tasks.bundling.Jar;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import dev.rdh.imag.config.ImagExtension;
 import dev.rdh.imag.task.ImagTask;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class ImagPlugin implements Plugin<Project> {
-	public static Project project;
+
+	@Nullable
+	private static Project project;
+
+	@NotNull
+	public static Project getProject() {
+		if(project == null) {
+			throw new IllegalStateException("Project not set");
+		}
+		return project;
+	}
 
 	@Override
 	public void apply(@NotNull Project project) {
@@ -22,15 +35,16 @@ public class ImagPlugin implements Plugin<Project> {
 		ImagExtension extension = project.getExtensions().create("imag", ImagExtension.class);
 
 		project.afterEvaluate(p -> {
-			if(!extension.getEnabled().get()) {
+			if(!extension.getEnabled().orElse(true).get()) {
+				project.getLogger().lifecycle("Imag is disabled");
 				return;
 			}
 
-			Set<AbstractArchiveTask> tasks = extension.getTasks().get();
-			tasks.add(project.getTasks().named("jar", Jar.class).get());
+			Set<AbstractArchiveTask> tasks = new HashSet<>(extension.getTasks().get());
+			tasks.add(p.getTasks().named("jar", Jar.class).get());
 
 			for(AbstractArchiveTask task : tasks) {
-				project.getTasks().create("imag" + capitalize(task.getName()), ImagTask.class, imagTask -> {
+				p.getTasks().create("imag" + capitalize(task.getName()), ImagTask.class, imagTask -> {
 					imagTask.setGroup("imag");
 					imagTask.setDescription("Optimize the " + task.getName() + " task's output");
 					imagTask.dependsOn(task);
@@ -40,9 +54,9 @@ public class ImagPlugin implements Plugin<Project> {
 				});
 			}
 
-			List<FileSystemLocation> files = extension.getFiles().get();
+			List<FileSystemLocation> files = new ArrayList<>(extension.getFiles().get());
 			for(FileSystemLocation file : files) {
-				project.getTasks().create("imag" + capitalize(file.getAsFile().getName()), ImagTask.class, imagTask -> {
+				p.getTasks().create("imag" + capitalize(file.getAsFile().getName()), ImagTask.class, imagTask -> {
 					imagTask.setGroup("imag");
 					imagTask.setDescription("Optimize " + file.getAsFile().getName());
 					imagTask.dependsOn(file);

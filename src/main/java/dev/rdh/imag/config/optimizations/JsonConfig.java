@@ -15,7 +15,7 @@ public abstract class JsonConfig {
 
 	{
 		getEnabled().convention(true);
-		getExtraFileExtensions().convention(ImagPlugin.project.getObjects().listProperty(String.class));
+		getExtraFileExtensions().convention(ImagPlugin.getProject().getObjects().listProperty(String.class));
 		getExtraFileExtensions().add("mcmeta");
 	}
 }
