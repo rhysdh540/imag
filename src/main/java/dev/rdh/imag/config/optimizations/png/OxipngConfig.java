@@ -6,6 +6,8 @@ import org.gradle.api.tasks.Input;
 
 import dev.rdh.imag.config.optimizations.DisableableConfig;
 
+import java.util.Objects;
+
 import static dev.rdh.imag.ImagPlugin.getProject;
 
 
@@ -70,6 +72,7 @@ public abstract class OxipngConfig extends DisableableConfig {
 	@Input
 	public abstract ListProperty<String> getKeepChunks();
 
+	@SuppressWarnings("unused")
 	public int getMax() {
 		return MAX_LEVEL;
 	}
@@ -93,6 +96,17 @@ public abstract class OxipngConfig extends DisableableConfig {
 		getFastFilterEvaluation().convention(false);
 		getFilterStrategies().convention(getProject().getObjects().listProperty(FilterStrategy.class));
 		getKeepChunks().convention(getProject().getObjects().listProperty(String.class));
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getEnabled().getOrNull(), getLevel().getOrNull(), getInterlace().getOrNull(),
+				getStrip().getOrNull(), getChangeBitDepth().getOrNull(), getChangeColorType().getOrNull(),
+				getChangePalette().getOrNull(), getChangeGrayscale().getOrNull(),
+				getPerformTransformations().getOrNull(), getRecompress().getOrNull(), getFix().getOrNull(),
+				getUseZopfli().getOrNull(), getTimeout().getOrNull(), getNumThreads().getOrNull(),
+				getAlphaOptimizations().getOrNull(), getScale16().getOrNull(), getFastFilterEvaluation().getOrNull(),
+				getCompressionLevel().getOrNull(), getFilterStrategies().getOrNull(), getKeepChunks().getOrNull());
 	}
 
 	public enum FilterStrategy {

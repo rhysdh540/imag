@@ -5,6 +5,9 @@ import org.gradle.api.tasks.Nested;
 
 import dev.rdh.imag.config.optimizations.DisableableConfig;
 
+import java.util.Objects;
+
+@SuppressWarnings("unused")
 public abstract class PngConfig extends DisableableConfig {
 
 	@Nested
@@ -12,5 +15,10 @@ public abstract class PngConfig extends DisableableConfig {
 
 	public void oxipng(Action<OxipngConfig> action) {
 		action.execute(getOxipng());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getEnabled().get(), getOxipng());
 	}
 }

@@ -7,12 +7,13 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
+
+import static dev.rdh.imag.Util.hash;
 
 public final class CacheManager {
 	private CacheManager() {}
 
-	private static final Path CACHE_DIR = ImagPlugin.getProject().getRootDir().toPath().resolve(".gradle").resolve("imag").resolve("cache");
+	private static final Path CACHE_DIR = ImagPlugin.getProject().getRootDir().toPath().resolve(".gradle").resolve("imag-cache");
 
 	private static void makeCacheDir() {
 		if(Files.exists(CACHE_DIR)) return;
@@ -50,9 +51,5 @@ public final class CacheManager {
 		} catch(IOException e) {
 			throw new UncheckedIOException(e);
 		}
-	}
-
-	public static String hash(Object... keys) {
-		return Integer.toHexString(Arrays.deepHashCode(keys));
 	}
 }

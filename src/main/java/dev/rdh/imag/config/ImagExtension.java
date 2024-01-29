@@ -15,6 +15,9 @@ import dev.rdh.imag.config.optimizations.JsonConfig;
 import dev.rdh.imag.config.optimizations.png.OxipngConfig.StripMode;
 import dev.rdh.imag.config.optimizations.png.PngConfig;
 
+import java.util.Objects;
+
+@SuppressWarnings("unused")
 public abstract class ImagExtension extends DisableableConfig {
 
 	@Input
@@ -22,8 +25,6 @@ public abstract class ImagExtension extends DisableableConfig {
 
 	@InputFiles
 	public abstract ListProperty<RegularFile> getFiles();
-
-	private Property<String> finalizeAfter;
 
 	@Input
 	public abstract Property<String> getFinalizeAfter();
@@ -46,6 +47,11 @@ public abstract class ImagExtension extends DisableableConfig {
 
 	public void png(Action<PngConfig> action) {
 		action.execute(getPng());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getEnabled().get(), getCache().get(), getJson(), getPng());
 	}
 
 	public StripMode getNone() { return StripMode.NONE; }

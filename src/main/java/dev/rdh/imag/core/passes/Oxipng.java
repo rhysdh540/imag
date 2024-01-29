@@ -2,6 +2,7 @@ package dev.rdh.imag.core.passes;
 
 import org.gradle.api.provider.Property;
 
+import dev.rdh.imag.Util;
 import dev.rdh.imag.config.optimizations.png.OxipngConfig;
 import dev.rdh.imag.config.optimizations.png.OxipngConfig.StripMode;
 import dev.rdh.imag.config.optimizations.png.PngConfig;
@@ -15,7 +16,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-import static dev.rdh.imag.ImagPlugin.getProject;
+import static dev.rdh.imag.Util.transferInputStream;
 
 public class Oxipng implements FileProcessor {
 	private final OxipngConfig config;
@@ -35,8 +36,6 @@ public class Oxipng implements FileProcessor {
 		if(CacheManager.isCached(config, fileContents)) {
 			return CacheManager.getCached(config, fileContents);
 		}
-
-		getProject().getLogger().lifecycle("Minifying " + fileContents.length + " bytes of PNG data");
 
 		List<String> args = new ArrayList<>();
 		args.add("oxipng");
@@ -100,21 +99,23 @@ public class Oxipng implements FileProcessor {
 		}
 
 		try {
-			File tempFile = File.createTempFile(CacheManager.hash(fileContents), ".png");
+			@SuppressWarnings("PrimitiveArrayArgumentToVarargsMethod")
+			File tempFile = File.createTempFile(Util.hash(fileContents), ".png");
 			Files.write(tempFile.toPath(), fileContents);
 			args.add(tempFile.getAbsolutePath());
+
 			ProcessBuilder pb = new ProcessBuilder(args);
 			Process p = pb.start();
 			int exit = p.waitFor();
 			if(exit != 0) {
-				p.getErrorStream().transferTo(System.err);
+				transferInputStream(p.getErrorStream(), System.err);
 				throw new IOException("oxipng exited with code " + exit);
 			}
 			byte[] result = Files.readAllBytes(tempFile.toPath());
 			CacheManager.cache(fileContents, config, result);
 			return result;
 		} catch (Exception e) {
-			throw new UncheckedIOException(e instanceof IOException io ? io : new IOException(e));
+			throw new UncheckedIOException(e instanceof IOException ? (IOException) e : new IOException(e));
 		}
 	}
 

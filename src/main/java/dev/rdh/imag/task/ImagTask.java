@@ -23,6 +23,8 @@ import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static dev.rdh.imag.Util.formatBytes;
+
 public class ImagTask extends DefaultTask {
 	private ImagExtension config;
 	private Supplier<File> file;
@@ -46,7 +48,7 @@ public class ImagTask extends DefaultTask {
 		project.getLogger().lifecycle("Minifying " + jar.getName());
 		project.getLogger().lifecycle("Original size: " + formatBytes(jar.length()));
 
-		Directory tempDir = project.getLayout().getBuildDirectory().dir("imag/" + jar.getName()).get();
+		Directory tempDir = project.getLayout().getBuildDirectory().dir("imag/" + jar.getName().replaceAll(".*.jar$", "")).get();
 		project.copy(spec -> {
 			spec.from(project.zipTree(jar));
 			spec.into(tempDir);
@@ -65,12 +67,19 @@ public class ImagTask extends DefaultTask {
 					contents = CacheManager.getCached(config, contents);
 				} else {
 					byte[] processed = contents;
+					boolean processedOnce = false;
+
 					for(FileProcessor processor : processors) {
 						if(processor.shouldProcess(file)) {
+							processedOnce = true;
 							processed = processor.process(processed);
 						}
 					}
-					CacheManager.cache(processed, config, contents);
+
+					if(processedOnce) {
+						project.getLogger().lifecycle("Processed " + file.getName() + " (" + formatBytes(contents.length - processed.length) + " saved)");
+						CacheManager.cache(processed, config, contents);
+					}
 					contents = processed;
 				}
 				Files.write(file.toPath(), contents);
@@ -98,13 +107,5 @@ public class ImagTask extends DefaultTask {
 		}
 
 		project.getLogger().lifecycle("New size: " + formatBytes(jar.length()));
-	}
-
-	private static String formatBytes(long bytes) {
-		if(bytes == 1) {
-			return "1 byte";
-		}
-
-		return String.format("%,d bytes", bytes);
 	}
 }

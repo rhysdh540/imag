@@ -1,6 +1,5 @@
 plugins {
-//    `java-gradle-plugin`
-    `groovy-gradle-plugin`
+    `java-gradle-plugin`
 }
 
 group = "dev.rdh"
