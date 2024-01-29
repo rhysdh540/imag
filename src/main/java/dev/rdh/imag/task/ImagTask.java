@@ -7,7 +7,7 @@ import org.gradle.api.tasks.TaskAction;
 
 import dev.rdh.imag.ImagPlugin;
 import dev.rdh.imag.config.ImagExtension;
-import dev.rdh.imag.config.optimizations.JsonConfig;
+import dev.rdh.imag.core.CacheManager;
 import dev.rdh.imag.core.FileProcessor;
 import dev.rdh.imag.core.passes.JsonMinifier;
 import dev.rdh.imag.core.passes.Oxipng;
@@ -61,10 +61,17 @@ public class ImagTask extends DefaultTask {
 
 			try {
 				byte[] contents = Files.readAllBytes(file.toPath());
-				for(FileProcessor processor : processors) {
-					if(processor.shouldProcess(file)) {
-						contents = processor.process(contents);
+				if(CacheManager.isCached(config, contents)) {
+					contents = CacheManager.getCached(config, contents);
+				} else {
+					byte[] processed = contents;
+					for(FileProcessor processor : processors) {
+						if(processor.shouldProcess(file)) {
+							processed = processor.process(processed);
+						}
 					}
+					CacheManager.cache(processed, config, contents);
+					contents = processed;
 				}
 				Files.write(file.toPath(), contents);
 			} catch(IOException e) {

@@ -12,7 +12,7 @@ import java.util.Arrays;
 public final class CacheManager {
 	private CacheManager() {}
 
-	private static final Path CACHE_DIR = ImagPlugin.getProject().getRootDir().toPath().resolve(".gradle").resolve("imag-cache");
+	private static final Path CACHE_DIR = ImagPlugin.getProject().getRootDir().toPath().resolve(".gradle").resolve("imag").resolve("cache");
 
 	private static void makeCacheDir() {
 		if(Files.exists(CACHE_DIR)) return;
@@ -42,11 +42,11 @@ public final class CacheManager {
 		return Files.exists(CACHE_DIR.resolve(hash));
 	}
 
-	public static void cache(byte[] postprocessed, Object... keys) {
+	public static void cache(byte[] processed, Object... keys) {
 		if(!ImagPlugin.getProject().getExtensions().getByType(ImagExtension.class).getCache().get()) return;
 		String hash = hash(keys);
 		try {
-			Files.write(CACHE_DIR.resolve(hash), postprocessed);
+			Files.write(CACHE_DIR.resolve(hash), processed);
 		} catch(IOException e) {
 			throw new UncheckedIOException(e);
 		}

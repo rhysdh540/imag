@@ -1,7 +1,6 @@
 package dev.rdh.imag.core.passes;
 
 import dev.rdh.imag.config.optimizations.JsonConfig;
-import dev.rdh.imag.core.CacheManager;
 import dev.rdh.imag.core.FileProcessor;
 
 import java.util.ArrayList;
@@ -22,10 +21,6 @@ public class JsonMinifier implements FileProcessor {
 	public byte[] process(byte[] fileContents) {
 		if(!config.getEnabled().get()) {
 			return fileContents;
-		}
-
-		if(CacheManager.isCached(config, fileContents)) {
-			return CacheManager.getCached(config, fileContents);
 		}
 
 		String json = new String(fileContents);
@@ -50,10 +45,7 @@ public class JsonMinifier implements FileProcessor {
 			}
 		}
 
-		byte[] processed = result.toString().getBytes();
-		CacheManager.cache(fileContents, config, processed);
-
-		return processed;
+		return result.toString().getBytes();
 	}
 
 	private static boolean shouldIgnore(char c) {

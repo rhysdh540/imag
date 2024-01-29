@@ -4,12 +4,12 @@ import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 
-import dev.rdh.imag.config.optimizations.OptimizationConfig;
+import dev.rdh.imag.config.optimizations.DisableableConfig;
 
 import static dev.rdh.imag.ImagPlugin.getProject;
 
 
-public abstract class OxipngConfig extends OptimizationConfig {
+public abstract class OxipngConfig extends DisableableConfig {
 	int MAX_LEVEL = 6;
 	int DEFAULT_LEVEL = 2;
 
@@ -78,16 +78,16 @@ public abstract class OxipngConfig extends OptimizationConfig {
 		getLevel().convention(DEFAULT_LEVEL);
 		getInterlace().convention(false);
 		getStrip().convention(StripMode.NONE);
-		getChangeBitDepth().convention(false);
-		getChangeColorType().convention(false);
-		getChangePalette().convention(false);
-		getChangeGrayscale().convention(false);
-		getPerformTransformations().convention(false);
-		getRecompress().convention(false);
+		getChangeBitDepth().convention(true);
+		getChangeColorType().convention(true);
+		getChangePalette().convention(true);
+		getChangeGrayscale().convention(true);
+		getPerformTransformations().convention(true);
+		getRecompress().convention(true);
 		getFix().convention(false);
 		getUseZopfli().convention(false);
-		getTimeout().convention(0);
-		getNumThreads().convention(0);
+		getTimeout().convention(-1);
+		getNumThreads().convention(-1);
 		getAlphaOptimizations().convention(false);
 		getScale16().convention(false);
 		getFastFilterEvaluation().convention(false);

@@ -10,58 +10,29 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 
-import dev.rdh.imag.ImagPlugin;
+import dev.rdh.imag.config.optimizations.DisableableConfig;
 import dev.rdh.imag.config.optimizations.JsonConfig;
 import dev.rdh.imag.config.optimizations.png.OxipngConfig.StripMode;
 import dev.rdh.imag.config.optimizations.png.PngConfig;
 
-public abstract class ImagExtension {
+public abstract class ImagExtension extends DisableableConfig {
 
-	private SetProperty<AbstractArchiveTask> tasks;
 	@Input
-	public SetProperty<AbstractArchiveTask> getTasks() {
-		if(tasks == null) {
-			tasks = ImagPlugin.getProject().getObjects().setProperty(AbstractArchiveTask.class);
-		}
-		return tasks;
-	}
+	public abstract SetProperty<AbstractArchiveTask> getTasks();
 
-	private ListProperty<RegularFile> files;
 	@InputFiles
-	public ListProperty<RegularFile> getFiles() {
-		if(files == null) {
-			files = ImagPlugin.getProject().getObjects().listProperty(RegularFile.class);
-		}
-		return files;
-	}
+	public abstract ListProperty<RegularFile> getFiles();
 
 	private Property<String> finalizeAfter;
 
 	@Input
-	public Property<String> getFinalizeAfter() {
-		if(finalizeAfter == null) {
-			finalizeAfter = ImagPlugin.getProject().getObjects().property(String.class).convention("assemble");
-		}
-		return finalizeAfter;
-	}
+	public abstract Property<String> getFinalizeAfter();
 
-	private Property<Boolean> enabled;
 	@Input
-	public Property<Boolean> getEnabled() {
-		if(enabled == null) {
-			enabled = ImagPlugin.getProject().getObjects().property(Boolean.class).convention(true);
-		}
-		return enabled;
-	}
+	public abstract Property<Boolean> getEnabled();
 
-	private Property<Boolean> cache;
 	@Input
-	public Property<Boolean> getCache() {
-		if(cache == null) {
-			cache = ImagPlugin.getProject().getObjects().property(Boolean.class).convention(true);
-		}
-		return cache;
-	}
+	public abstract Property<Boolean> getCache();
 
 	@Nested
 	public abstract JsonConfig getJson();

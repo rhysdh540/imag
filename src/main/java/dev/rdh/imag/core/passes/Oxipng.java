@@ -15,6 +15,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import static dev.rdh.imag.ImagPlugin.getProject;
+
 public class Oxipng implements FileProcessor {
 	private final OxipngConfig config;
 	private final Property<Boolean> pngEnabled;
@@ -34,14 +36,19 @@ public class Oxipng implements FileProcessor {
 			return CacheManager.getCached(config, fileContents);
 		}
 
+		getProject().getLogger().lifecycle("Minifying " + fileContents.length + " bytes of PNG data");
+
 		List<String> args = new ArrayList<>();
 		args.add("oxipng");
-		args.add("-o" + config.getLevel().get());
+		args.add("-o");
+		args.add(config.getLevel().get().toString());
 		if(config.getInterlace().get()) {
-			args.add("-i 1");
+			args.add("-i");
+			args.add("1");
 		}
 		if(config.getStrip().get() != StripMode.NONE) {
-			args.add("-s" + config.getStrip().get());
+			args.add("-s");
+			args.add(String.valueOf(config.getStrip().get()));
 		}
 		if(!config.getChangeBitDepth().get()) {
 			args.add("--nb");
@@ -64,10 +71,10 @@ public class Oxipng implements FileProcessor {
 		if(config.getFix().get()) {
 			args.add("--fix");
 		}
-		if(config.getNumThreads().isPresent()) {
+		if(config.getNumThreads().get() != -1) {
 			args.add("-t " + config.getNumThreads().get());
 		}
-		if(config.getTimeout().isPresent()) {
+		if(config.getTimeout().get() != -1) {
 			args.add("--timeout " + config.getTimeout().get());
 		}
 		if(config.getUseZopfli().get()) {
@@ -98,7 +105,11 @@ public class Oxipng implements FileProcessor {
 			args.add(tempFile.getAbsolutePath());
 			ProcessBuilder pb = new ProcessBuilder(args);
 			Process p = pb.start();
-			p.waitFor();
+			int exit = p.waitFor();
+			if(exit != 0) {
+				p.getErrorStream().transferTo(System.err);
+				throw new IOException("oxipng exited with code " + exit);
+			}
 			byte[] result = Files.readAllBytes(tempFile.toPath());
 			CacheManager.cache(fileContents, config, result);
 			return result;
