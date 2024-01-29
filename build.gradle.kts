@@ -13,3 +13,12 @@ repositories {
 dependencies {
     implementation(gradleApi())
 }
+
+gradlePlugin {
+    plugins {
+        register("imag") {
+            id = "dev.rdh.imag"
+            implementationClass = "dev.rdh.imag.ImagPlugin"
+        }
+    }
+}
