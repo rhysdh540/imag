@@ -35,7 +35,7 @@ public class ImagPlugin implements Plugin<Project> {
 		ImagExtension extension = project.getExtensions().create("imag", ImagExtension.class);
 
 		project.afterEvaluate(p -> {
-			if(!extension.getEnabled().orElse(true).get()) {
+			if(!extension.getEnabled().get()) {
 				project.getLogger().lifecycle("Imag is disabled");
 				return;
 			}

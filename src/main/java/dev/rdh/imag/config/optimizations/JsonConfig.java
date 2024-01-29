@@ -6,16 +6,15 @@ import org.gradle.api.tasks.Input;
 
 import dev.rdh.imag.ImagPlugin;
 
-public abstract class JsonConfig {
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public abstract class JsonConfig extends OptimizationConfig {
+
 	@Input
 	public abstract ListProperty<String> getExtraFileExtensions();
 
-	@Input
-	public abstract Property<Boolean> getEnabled();
-
 	{
-		getEnabled().convention(true);
-		getExtraFileExtensions().convention(ImagPlugin.getProject().getObjects().listProperty(String.class));
-		getExtraFileExtensions().add("mcmeta");
+		getExtraFileExtensions().convention(Arrays.asList("mcmeta"));
 	}
 }

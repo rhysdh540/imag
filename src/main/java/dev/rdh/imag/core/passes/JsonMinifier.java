@@ -1,7 +1,5 @@
 package dev.rdh.imag.core.passes;
 
-import org.gradle.api.provider.Property;
-
 import dev.rdh.imag.config.optimizations.JsonConfig;
 import dev.rdh.imag.core.CacheManager;
 import dev.rdh.imag.core.FileProcessor;
@@ -11,23 +9,23 @@ import java.util.List;
 
 public class JsonMinifier implements FileProcessor {
 	private final String[] supportedExtensions;
-	private final Property<Boolean> enabled;
+	private final JsonConfig config;
 
 	public JsonMinifier(JsonConfig config) {
 		List<String> extensions = new ArrayList<>(config.getExtraFileExtensions().get());
 		extensions.add("json");
 		supportedExtensions = extensions.toArray(new String[0]);
-		enabled = config.getEnabled();
+		this.config = config;
 	}
 
 	@Override
 	public byte[] process(byte[] fileContents) {
-		if(!enabled.get()) {
+		if(!config.getEnabled().get()) {
 			return fileContents;
 		}
 
-		if(CacheManager.isCached(fileContents)) {
-			return CacheManager.getCached(fileContents);
+		if(CacheManager.isCached(config, fileContents)) {
+			return CacheManager.getCached(config, fileContents);
 		}
 
 		String json = new String(fileContents);
@@ -53,7 +51,7 @@ public class JsonMinifier implements FileProcessor {
 		}
 
 		byte[] processed = result.toString().getBytes();
-		CacheManager.cache(fileContents, processed);
+		CacheManager.cache(fileContents, config, processed);
 
 		return processed;
 	}

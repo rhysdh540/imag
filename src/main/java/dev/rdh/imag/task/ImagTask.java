@@ -10,6 +10,7 @@ import dev.rdh.imag.config.ImagExtension;
 import dev.rdh.imag.config.optimizations.JsonConfig;
 import dev.rdh.imag.core.FileProcessor;
 import dev.rdh.imag.core.passes.JsonMinifier;
+import dev.rdh.imag.core.passes.Oxipng;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,11 +24,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class ImagTask extends DefaultTask {
-	private JsonConfig jsonConfig;
+	private ImagExtension config;
 	private Supplier<File> file;
 
 	public void setConfig(ImagExtension config) {
-		jsonConfig = config.getJson();
+		this.config = config;
 	}
 
 	public void setFile(Supplier<File> file) {
@@ -52,7 +53,8 @@ public class ImagTask extends DefaultTask {
 		});
 
 		List<FileProcessor> processors = new ArrayList<>();
-		processors.add(new JsonMinifier(jsonConfig));
+		processors.add(new JsonMinifier(config.getJson()));
+		processors.add(new Oxipng(config.getPng()));
 
 		for(File file : tempDir.getAsFileTree()) {
 			if(!file.isFile()) continue;
@@ -60,7 +62,9 @@ public class ImagTask extends DefaultTask {
 			try {
 				byte[] contents = Files.readAllBytes(file.toPath());
 				for(FileProcessor processor : processors) {
-					contents = processor.process(contents);
+					if(processor.shouldProcess(file)) {
+						contents = processor.process(contents);
+					}
 				}
 				Files.write(file.toPath(), contents);
 			} catch(IOException e) {
