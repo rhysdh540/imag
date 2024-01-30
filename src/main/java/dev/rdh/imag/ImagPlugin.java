@@ -16,6 +16,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.codehaus.groovy.runtime.StringGroovyMethods.capitalize;
+
 public class ImagPlugin implements Plugin<Project> {
 
 	@Nullable
@@ -65,9 +67,5 @@ public class ImagPlugin implements Plugin<Project> {
 				});
 			}
 		});
-	}
-
-	private static String capitalize(String str) {
-		return str.substring(0, 1).toUpperCase() + str.substring(1);
 	}
 }

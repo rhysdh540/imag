@@ -9,6 +9,7 @@ import dev.rdh.imag.ImagPlugin;
 import dev.rdh.imag.config.ImagExtension;
 import dev.rdh.imag.core.CacheManager;
 import dev.rdh.imag.core.FileProcessor;
+import dev.rdh.imag.core.passes.Ect;
 import dev.rdh.imag.core.passes.JsonMinifier;
 import dev.rdh.imag.core.passes.Oxipng;
 
@@ -24,6 +25,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static dev.rdh.imag.Util.formatBytes;
+import static org.gradle.util.internal.GFileUtils.deleteDirectory;
 
 public class ImagTask extends DefaultTask {
 	private ImagExtension config;
@@ -40,6 +42,11 @@ public class ImagTask extends DefaultTask {
 	@TaskAction
 	public void run() {
 		Project project = ImagPlugin.getProject();
+		if(!config.getEnabled().get()) {
+			project.getLogger().lifecycle("Imag is disabled");
+			return;
+		}
+
 		File jar = file.get();
 		if(!jar.exists()) {
 			project.getLogger().error(jar.getName() + " does not exist");
@@ -48,15 +55,19 @@ public class ImagTask extends DefaultTask {
 		project.getLogger().lifecycle("Minifying " + jar.getName());
 		project.getLogger().lifecycle("Original size: " + formatBytes(jar.length()));
 
-		Directory tempDir = project.getLayout().getBuildDirectory().dir("imag/" + jar.getName().replaceAll(".*.jar$", "")).get();
+		Directory tempDir = project.getLayout().getBuildDirectory().get().dir("imag").dir(jar.getName());
+		if(tempDir.getAsFile().exists()) {
+			deleteDirectory(tempDir.getAsFile());
+		}
 		project.copy(spec -> {
 			spec.from(project.zipTree(jar));
 			spec.into(tempDir);
 		});
 
 		List<FileProcessor> processors = new ArrayList<>();
-		processors.add(new JsonMinifier(config.getJson()));
-		processors.add(new Oxipng(config.getPng()));
+		processors.add(new JsonMinifier(config));
+		processors.add(new Ect(config));
+		processors.add(new Oxipng(config));
 
 		for(File file : tempDir.getAsFileTree()) {
 			if(!file.isFile()) continue;
@@ -65,6 +76,7 @@ public class ImagTask extends DefaultTask {
 				byte[] contents = Files.readAllBytes(file.toPath());
 				if(CacheManager.isCached(config, contents)) {
 					contents = CacheManager.getCached(config, contents);
+					project.getLogger().lifecycle("Using cached " + file.getName() + " (" + formatBytes(contents.length) + " smaller)");
 				} else {
 					byte[] processed = contents;
 					boolean processedOnce = false;
@@ -72,6 +84,7 @@ public class ImagTask extends DefaultTask {
 					for(FileProcessor processor : processors) {
 						if(processor.shouldProcess(file)) {
 							processedOnce = true;
+							project.getLogger().lifecycle("Processing " + file.getName() + " with " + processor.getClass().getSimpleName());
 							processed = processor.process(processed);
 						}
 					}

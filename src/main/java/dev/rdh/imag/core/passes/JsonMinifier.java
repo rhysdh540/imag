@@ -1,28 +1,31 @@
 package dev.rdh.imag.core.passes;
 
+import org.gradle.api.provider.Property;
+
+import dev.rdh.imag.config.ImagExtension;
 import dev.rdh.imag.config.optimizations.JsonConfig;
 import dev.rdh.imag.core.FileProcessor;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class JsonMinifier implements FileProcessor {
 	private final String[] supportedExtensions;
 	private final JsonConfig config;
+	private final Property<Boolean> imagEnabled;
 
-	public JsonMinifier(JsonConfig config) {
-		List<String> extensions = new ArrayList<>(config.getExtraFileExtensions().get());
+	public JsonMinifier(ImagExtension config) {
+		this.imagEnabled = config.getEnabled();
+		JsonConfig json = config.getJson();
+		List<String> extensions = new ArrayList<>(json.getExtraFileExtensions().get());
 		extensions.add("json");
-		supportedExtensions = extensions.toArray(new String[0]);
-		this.config = config;
+		this.supportedExtensions = extensions.toArray(new String[0]);
+		this.config = json;
 	}
 
 	@Override
 	public byte[] process(byte[] fileContents) {
-		if(!config.getEnabled().get()) {
-			return fileContents;
-		}
-
 		String json = new String(fileContents);
 		StringBuilder result = new StringBuilder();
 		boolean inString = false;
@@ -55,5 +58,10 @@ public class JsonMinifier implements FileProcessor {
 	@Override
 	public String[] getSupportedExtensions() {
 		return supportedExtensions;
+	}
+
+	@Override
+	public boolean shouldProcess(File file) {
+		return FileProcessor.super.shouldProcess(file) && config.getEnabled().get() && imagEnabled.get();
 	}
 }

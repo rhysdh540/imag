@@ -1,6 +1,9 @@
 package dev.rdh.imag.core;
 
+import dev.rdh.imag.Util;
+
 import java.io.File;
+import java.util.Arrays;
 
 public interface FileProcessor {
 	byte[] process(byte[] fileContents);
@@ -8,12 +11,7 @@ public interface FileProcessor {
 	String[] getSupportedExtensions();
 
 	default boolean shouldProcess(File file) {
-		String filename = file.getName();
-		for(String ext : getSupportedExtensions()) {
-			if(filename.endsWith(ext)) {
-				return true;
-			}
-		}
-		return false;
+		String extension = Util.getFileExtension(file);
+		return Arrays.stream(getSupportedExtensions()).anyMatch(s -> s.equalsIgnoreCase(extension));
 	}
 }

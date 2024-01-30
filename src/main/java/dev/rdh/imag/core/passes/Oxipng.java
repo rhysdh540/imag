@@ -3,40 +3,28 @@ package dev.rdh.imag.core.passes;
 import org.gradle.api.provider.Property;
 
 import dev.rdh.imag.Util;
+import dev.rdh.imag.config.ImagExtension;
 import dev.rdh.imag.config.optimizations.png.OxipngConfig;
 import dev.rdh.imag.config.optimizations.png.OxipngConfig.StripMode;
-import dev.rdh.imag.config.optimizations.png.PngConfig;
-import dev.rdh.imag.core.CacheManager;
 import dev.rdh.imag.core.FileProcessor;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-
-import static dev.rdh.imag.Util.transferInputStream;
 
 public class Oxipng implements FileProcessor {
 	private final OxipngConfig config;
 	private final Property<Boolean> pngEnabled;
+	private final Property<Boolean> imagEnabled;
 
-	public Oxipng(PngConfig config) {
-		this.config = config.getOxipng();
+	public Oxipng(ImagExtension config) {
+		this.config = config.getPng().getOxipng();
+		this.imagEnabled = config.getEnabled();
 		this.pngEnabled = config.getEnabled();
 	}
 
 	@Override
 	public byte[] process(byte[] fileContents) {
-		if(!config.getEnabled().get() || !pngEnabled.get()) {
-			return fileContents;
-		}
-
-		if(CacheManager.isCached(config, fileContents)) {
-			return CacheManager.getCached(config, fileContents);
-		}
-
 		List<String> args = new ArrayList<>();
 		args.add("oxipng");
 		args.add("-o");
@@ -71,10 +59,12 @@ public class Oxipng implements FileProcessor {
 			args.add("--fix");
 		}
 		if(config.getNumThreads().get() != -1) {
-			args.add("-t " + config.getNumThreads().get());
+			args.add("-t");
+			args.add(String.valueOf(config.getNumThreads().get()));
 		}
 		if(config.getTimeout().get() != -1) {
-			args.add("--timeout " + config.getTimeout().get());
+			args.add("--timeout");
+			args.add(String.valueOf(config.getTimeout().get()));
 		}
 		if(config.getUseZopfli().get()) {
 			args.add("-Z");
@@ -89,38 +79,30 @@ public class Oxipng implements FileProcessor {
 			args.add("--fast");
 		}
 		if(config.getFilterStrategies().isPresent() && !config.getFilterStrategies().get().isEmpty()) {
-			args.add("--filters " + String.join(",", config.getFilterStrategies().get().stream().map(String::valueOf).toArray(String[]::new)));
+			String[] strategies = config.getFilterStrategies().get().stream().map(String::valueOf).toArray(String[]::new);
+			args.add("--filters");
+			args.add(String.join(",", strategies));
 		}
 		if(config.getCompressionLevel().isPresent()) {
-			args.add("--zc " + config.getCompressionLevel().get());
+			args.add("--zc");
+			args.add(String.valueOf(config.getCompressionLevel().get()));
 		}
 		if(config.getKeepChunks().isPresent() && !config.getKeepChunks().get().isEmpty()) {
-			args.add("--keep " + String.join(",", config.getKeepChunks().get().stream().map(String::valueOf).toArray(String[]::new)));
+			String[] chunks = config.getKeepChunks().get().stream().map(String::valueOf).toArray(String[]::new);
+			args.add("--keep");
+			args.add(String.join(",", chunks));
 		}
 
-		try {
-			@SuppressWarnings("PrimitiveArrayArgumentToVarargsMethod")
-			File tempFile = File.createTempFile(Util.hash(fileContents), ".png");
-			Files.write(tempFile.toPath(), fileContents);
-			args.add(tempFile.getAbsolutePath());
-
-			ProcessBuilder pb = new ProcessBuilder(args);
-			Process p = pb.start();
-			int exit = p.waitFor();
-			if(exit != 0) {
-				transferInputStream(p.getErrorStream(), System.err);
-				throw new IOException("oxipng exited with code " + exit);
-			}
-			byte[] result = Files.readAllBytes(tempFile.toPath());
-			CacheManager.cache(fileContents, config, result);
-			return result;
-		} catch (Exception e) {
-			throw new UncheckedIOException(e instanceof IOException ? (IOException) e : new IOException(e));
-		}
+		return Util.processFileWithCommand(args, fileContents, "png");
 	}
 
 	@Override
 	public String[] getSupportedExtensions() {
 		return new String[] { "png" };
+	}
+
+	@Override
+	public boolean shouldProcess(File file) {
+		return FileProcessor.super.shouldProcess(file) && config.getEnabled().get() && pngEnabled.get() && imagEnabled.get();
 	}
 }

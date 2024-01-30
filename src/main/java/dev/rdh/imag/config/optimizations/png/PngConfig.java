@@ -13,8 +13,15 @@ public abstract class PngConfig extends DisableableConfig {
 	@Nested
 	public abstract OxipngConfig getOxipng();
 
+	@Nested
+	public abstract EctConfig getEct();
+
 	public void oxipng(Action<OxipngConfig> action) {
 		action.execute(getOxipng());
+	}
+
+	public void ect(Action<EctConfig> action) {
+		action.execute(getEct());
 	}
 
 	@Override

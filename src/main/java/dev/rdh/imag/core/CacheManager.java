@@ -30,6 +30,7 @@ public final class CacheManager {
 
 	public static byte[] getCached(Object... keys) {
 		String hash = hash(keys);
+		makeCacheDir();
 		try {
 			return Files.readAllBytes(CACHE_DIR.resolve(hash));
 		} catch(IOException e) {
@@ -45,6 +46,7 @@ public final class CacheManager {
 
 	public static void cache(byte[] processed, Object... keys) {
 		if(!ImagPlugin.getProject().getExtensions().getByType(ImagExtension.class).getCache().get()) return;
+		makeCacheDir();
 		String hash = hash(keys);
 		try {
 			Files.write(CACHE_DIR.resolve(hash), processed);

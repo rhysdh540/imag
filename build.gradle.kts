@@ -2,6 +2,8 @@ plugins {
     `java-gradle-plugin`
 }
 
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
 group = "dev.rdh"
 version = "0.0"
 base.archivesName = "imag"

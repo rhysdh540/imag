@@ -12,8 +12,8 @@ import static dev.rdh.imag.ImagPlugin.getProject;
 
 
 public abstract class OxipngConfig extends DisableableConfig {
-	int MAX_LEVEL = 6;
-	int DEFAULT_LEVEL = 2;
+	public final int maxLevel = 6;
+	public final int defaultLevel = 2;
 
 	@Input
 	public abstract Property<Integer> getLevel();
@@ -72,13 +72,8 @@ public abstract class OxipngConfig extends DisableableConfig {
 	@Input
 	public abstract ListProperty<String> getKeepChunks();
 
-	@SuppressWarnings("unused")
-	public int getMax() {
-		return MAX_LEVEL;
-	}
-
 	{
-		getLevel().convention(DEFAULT_LEVEL);
+		getLevel().convention(defaultLevel);
 		getInterlace().convention(false);
 		getStrip().convention(StripMode.NONE);
 		getChangeBitDepth().convention(true);
