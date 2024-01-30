@@ -74,9 +74,10 @@ public class ImagTask extends DefaultTask {
 
 			try {
 				byte[] contents = Files.readAllBytes(file.toPath());
-				if(CacheManager.isCached(config, contents)) {
-					contents = CacheManager.getCached(config, contents);
-					project.getLogger().lifecycle("Using cached " + file.getName() + " (" + formatBytes(contents.length) + " smaller)");
+				if(CacheManager.isCached(contents)) {
+					byte[] newContents = CacheManager.getCached(contents);
+					project.getLogger().lifecycle("Using cached " + file.getName() + " (" + formatBytes(contents.length - newContents.length) + " smaller)");
+					contents = newContents;
 				} else {
 					byte[] processed = contents;
 					boolean processedOnce = false;
@@ -91,7 +92,7 @@ public class ImagTask extends DefaultTask {
 
 					if(processedOnce) {
 						project.getLogger().lifecycle("Processed " + file.getName() + " (" + formatBytes(contents.length - processed.length) + " saved)");
-						CacheManager.cache(processed, config, contents);
+						CacheManager.cache(processed, contents);
 					}
 					contents = processed;
 				}

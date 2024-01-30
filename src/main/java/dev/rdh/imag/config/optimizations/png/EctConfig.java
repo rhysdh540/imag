@@ -16,11 +16,23 @@ public abstract class EctConfig extends DisableableConfig {
 	@Input
 	public abstract Property<Boolean> getStrip();
 
+	public void strip() {
+		getStrip().set(true);
+	}
+
 	@Input
 	public abstract Property<Boolean> getStrictLosslessness();
 
+	public void strictLosslessness() {
+		getStrictLosslessness().set(true);
+	}
+
 	@Input
 	public abstract Property<Boolean> getReuse();
+
+	public void reuseFilter() {
+		getReuse().set(true);
+	}
 
 	@Input
 	public abstract Property<FilterMode> getFilterMode();
@@ -31,8 +43,16 @@ public abstract class EctConfig extends DisableableConfig {
 	@Input
 	public abstract Property<Boolean> getDeflateMultithreading();
 
+	public void deflateMultithreading() {
+		getDeflateMultithreading().set(true);
+	}
+
 	@Input
 	public abstract Property<Integer> getDeflateMultithreadingThreads();
+
+	public void deflateMultithreading(int threads) {
+		getDeflateMultithreadingThreads().set(threads);
+	}
 
 	{
 		getLevel().convention(defaultLevel);
@@ -46,8 +66,8 @@ public abstract class EctConfig extends DisableableConfig {
 	}
 
 	public FilterMode getDefault() { return FilterMode.DEFAULT; }
-	public FilterMode getAll() { return FilterMode.ALL; }
-	public FilterMode getAllB() { return FilterMode.ALL_B; }
+	public FilterMode getAllFilters() { return FilterMode.ALL; }
+	public FilterMode getAllFiltersB() { return FilterMode.ALL_B; }
 
 	public enum FilterMode {
 		DEFAULT, ALL, ALL_B;

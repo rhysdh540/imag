@@ -9,10 +9,29 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 public final class Util {
-	public static String hash(Object... keys) {
-		return Integer.toHexString(Arrays.deepHashCode(keys));
+	public static String hash(byte[] bytes) {
+		return Integer.toHexString(Arrays.hashCode(bytes));
+	}
+
+	public static String hash(Object... objects) {
+		return Integer.toHexString(Arrays.deepHashCode(objects));
+	}
+
+	public static void deleteDirectory(Path directory) {
+		try(Stream<Path> stream = Files.walk(directory)) {
+			stream.sorted((a, b) -> -a.compareTo(b)).forEachOrdered(path -> {
+				try {
+					Files.delete(path);
+				} catch(IOException e) {
+					throw new UncheckedIOException(e);
+				}
+			});
+		} catch(IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 	public static String formatBytes(long bytes) {

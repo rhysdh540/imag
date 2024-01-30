@@ -21,32 +21,68 @@ public abstract class OxipngConfig extends DisableableConfig {
 	@Input
 	public abstract Property<Boolean> getInterlace();
 
+	public void interlace() {
+		getInterlace().set(true);
+	}
+
 	@Input
 	public abstract Property<StripMode> getStrip();
 
 	@Input
 	public abstract Property<Boolean> getChangeBitDepth();
 
+	public void dontChangeBitDepth() {
+		getChangeBitDepth().set(false);
+	}
+
 	@Input
 	public abstract Property<Boolean> getChangeColorType();
+
+	public void dontChangeColorType() {
+		getChangeColorType().set(false);
+	}
 
 	@Input
 	public abstract Property<Boolean> getChangePalette();
 
+	public void dontChangePalette() {
+		getChangePalette().set(false);
+	}
+
 	@Input
 	public abstract Property<Boolean> getChangeGrayscale();
+
+	public void dontChangeGrayscale() {
+		getChangeGrayscale().set(false);
+	}
 
 	@Input
 	public abstract Property<Boolean> getPerformTransformations();
 
+	public void dontPerformTransformations() {
+		getPerformTransformations().set(false);
+	}
+
 	@Input
 	public abstract Property<Boolean> getRecompress();
+
+	public void dontRecompress() {
+		getRecompress().set(false);
+	}
 
 	@Input
 	public abstract Property<Boolean> getFix();
 
+	public void fix() {
+		getFix().set(true);
+	}
+
 	@Input
 	public abstract Property<Boolean> getUseZopfli();
+
+	public void useZopfli() {
+		getUseZopfli().set(true);
+	}
 
 	@Input
 	public abstract Property<Integer> getTimeout();
@@ -57,11 +93,23 @@ public abstract class OxipngConfig extends DisableableConfig {
 	@Input
 	public abstract Property<Boolean> getAlphaOptimizations();
 
+	public void enableAlphaOptimizations() {
+		getAlphaOptimizations().set(true);
+	}
+
 	@Input
 	public abstract Property<Boolean> getScale16();
 
+	public void scale16() {
+		getScale16().set(true);
+	}
+
 	@Input
 	public abstract Property<Boolean> getFastFilterEvaluation();
+
+	public void fastFilterEvaluation() {
+		getFastFilterEvaluation().set(true);
+	}
 
 	@Input
 	public abstract Property<Integer> getCompressionLevel();

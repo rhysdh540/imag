@@ -11,5 +11,9 @@ public abstract class DisableableConfig {
 		getEnabled().convention(true);
 	}
 
+	public void disable() {
+		getEnabled().set(false);
+	}
+
 	public abstract int hashCode();
 }
