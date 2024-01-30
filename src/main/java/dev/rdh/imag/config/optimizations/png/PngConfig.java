@@ -26,6 +26,6 @@ public abstract class PngConfig extends DisableableConfig {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(getEnabled().get(), getOxipng());
+		return Objects.hash(getEnabled().get(), getOxipng(), getEct());
 	}
 }

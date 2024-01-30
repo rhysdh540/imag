@@ -1,7 +1,7 @@
 package dev.rdh.imag.core;
 
+
 import dev.rdh.imag.ImagPlugin;
-import dev.rdh.imag.Util;
 import dev.rdh.imag.config.ImagExtension;
 
 import java.io.IOException;
@@ -14,8 +14,8 @@ import static dev.rdh.imag.Util.hash;
 public final class CacheManager {
 	private CacheManager() {}
 
-	private static final Path CACHE_DIR = ImagPlugin.getProject().getRootDir().toPath().resolve(".gradle").resolve("imag-cache");
-	private static final Path SETTINGS_HASH = CACHE_DIR.resolve("settings.hash");
+	private static final Path MAIN_CACHE_DIR = ImagPlugin.getProject().getRootDir().toPath().resolve(".gradle").resolve("imag-cache");
+	private static Path CACHE_DIR;
 
 	private static void makeCacheDir() {
 		if(Files.exists(CACHE_DIR)) return;
@@ -27,18 +27,9 @@ public final class CacheManager {
 	}
 
 	static {
+		String newHash = hash(ImagPlugin.getProject().getExtensions().getByType(ImagExtension.class));
+		CACHE_DIR = MAIN_CACHE_DIR.resolve(newHash);
 		makeCacheDir();
-		try {
-			String oldHash = Files.exists(SETTINGS_HASH) ? Files.readAllLines(SETTINGS_HASH).get(0) : "";
-			String newHash = hash(ImagPlugin.getProject().getExtensions().getByType(ImagExtension.class));
-			if(!oldHash.equals(newHash)) {
-				Util.deleteDirectory(CACHE_DIR);
-				Files.createDirectories(CACHE_DIR);
-				Files.write(SETTINGS_HASH, newHash.getBytes());
-			}
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
 	}
 
 	public static byte[] getCached(byte[] preprocessed) {

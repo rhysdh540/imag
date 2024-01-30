@@ -22,13 +22,14 @@ public final class Util {
 
 	public static void deleteDirectory(Path directory) {
 		try(Stream<Path> stream = Files.walk(directory)) {
-			stream.sorted((a, b) -> -a.compareTo(b)).forEachOrdered(path -> {
-				try {
-					Files.delete(path);
-				} catch(IOException e) {
-					throw new UncheckedIOException(e);
-				}
-			});
+			stream.sorted((a, b) -> -a.compareTo(b))
+					.forEachOrdered(path -> {
+						try {
+							Files.delete(path);
+						} catch(IOException e) {
+							throw new UncheckedIOException(e);
+						}
+					});
 		} catch(IOException e) {
 			throw new UncheckedIOException(e);
 		}

@@ -3,9 +3,13 @@ package dev.rdh.imag.task;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
 
 import dev.rdh.imag.ImagPlugin;
+import dev.rdh.imag.Util;
 import dev.rdh.imag.config.ImagExtension;
 import dev.rdh.imag.core.CacheManager;
 import dev.rdh.imag.core.FileProcessor;
@@ -18,6 +22,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.zip.Deflater;
@@ -35,25 +40,42 @@ public class ImagTask extends DefaultTask {
 		this.config = config;
 	}
 
+	@Input
+	public ImagExtension getConfig() {
+		return config;
+	}
+
 	public void setFile(Supplier<File> file) {
 		this.file = file;
+	}
+
+	public void setFile(File file) {
+		setFile(() -> file);
+	}
+
+	@InputFile
+	public File getFile() {
+		return file.get();
 	}
 
 	@TaskAction
 	public void run() {
 		Project project = ImagPlugin.getProject();
+		Logger logger = project.getLogger();
 		if(!config.getEnabled().get()) {
-			project.getLogger().lifecycle("Imag is disabled");
+			logger.lifecycle("Imag is disabled");
 			return;
 		}
 
 		File jar = file.get();
 		if(!jar.exists()) {
-			project.getLogger().error(jar.getName() + " does not exist");
+			logger.error(jar.getName() + " does not exist");
 			return;
 		}
-		project.getLogger().lifecycle("Minifying " + jar.getName());
-		project.getLogger().lifecycle("Original size: " + formatBytes(jar.length()));
+		logger.lifecycle("Minifying " + jar.getName());
+		logger.lifecycle("Original size: " + formatBytes(jar.length()));
+		logger.quiet("Hash: " + Util.hash(project.getExtensions().findByType(ImagExtension.class)));
+		logger.quiet("Hash: " + Util.hash(project.getExtensions().findByType(ImagExtension.class)));
 
 		Directory tempDir = project.getLayout().getBuildDirectory().get().dir("imag").dir(jar.getName());
 		if(tempDir.getAsFile().exists()) {
@@ -64,10 +86,11 @@ public class ImagTask extends DefaultTask {
 			spec.into(tempDir);
 		});
 
-		List<FileProcessor> processors = new ArrayList<>();
-		processors.add(new JsonMinifier(config));
-		processors.add(new Ect(config));
-		processors.add(new Oxipng(config));
+		List<FileProcessor> processors = Arrays.asList(
+				new JsonMinifier(config),
+				new Ect(config),
+				new Oxipng(config)
+		);
 
 		for(File file : tempDir.getAsFileTree()) {
 			if(!file.isFile()) continue;
@@ -76,7 +99,7 @@ public class ImagTask extends DefaultTask {
 				byte[] contents = Files.readAllBytes(file.toPath());
 				if(CacheManager.isCached(contents)) {
 					byte[] newContents = CacheManager.getCached(contents);
-					project.getLogger().lifecycle("Using cached " + file.getName() + " (" + formatBytes(contents.length - newContents.length) + " smaller)");
+					logger.lifecycle("Using cached " + file.getName() + " (" + formatBytes(contents.length - newContents.length) + " smaller)");
 					contents = newContents;
 				} else {
 					byte[] processed = contents;
@@ -85,25 +108,25 @@ public class ImagTask extends DefaultTask {
 					for(FileProcessor processor : processors) {
 						if(processor.shouldProcess(file)) {
 							processedOnce = true;
-							project.getLogger().lifecycle("Processing " + file.getName() + " with " + processor.getClass().getSimpleName());
+							logger.info("Processing " + file.getName() + " with " + processor.getClass().getSimpleName());
 							processed = processor.process(processed);
 						}
 					}
 
 					if(processedOnce) {
-						project.getLogger().lifecycle("Processed " + file.getName() + " (" + formatBytes(contents.length - processed.length) + " saved)");
+						logger.lifecycle("Processed " + file.getName() + " (" + formatBytes(contents.length - processed.length) + " saved)");
 						CacheManager.cache(processed, contents);
 					}
 					contents = processed;
 				}
 				Files.write(file.toPath(), contents);
 			} catch(IOException e) {
-				project.getLogger().error("Failed to minify " + file.getName(), e);
+				logger.error("Failed to minify " + file.getName(), e);
 			}
 		}
 
 		if(!jar.delete()) {
-			project.getLogger().error("Failed to delete " + jar.getName());
+			logger.error("Failed to delete " + jar.getName());
 		}
 
 		try(ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(jar.toPath()))) {
@@ -120,6 +143,6 @@ public class ImagTask extends DefaultTask {
 			throw new UncheckedIOException(e);
 		}
 
-		project.getLogger().lifecycle("New size: " + formatBytes(jar.length()));
+		logger.lifecycle("New size: " + formatBytes(jar.length()));
 	}
 }

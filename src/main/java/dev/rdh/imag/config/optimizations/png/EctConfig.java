@@ -5,6 +5,8 @@ import org.gradle.api.tasks.Input;
 
 import dev.rdh.imag.config.optimizations.DisableableConfig;
 
+import java.util.Objects;
+
 @SuppressWarnings("unused")
 public abstract class EctConfig extends DisableableConfig {
 	public final int maxLevel = 9;
@@ -68,6 +70,13 @@ public abstract class EctConfig extends DisableableConfig {
 	public FilterMode getDefault() { return FilterMode.DEFAULT; }
 	public FilterMode getAllFilters() { return FilterMode.ALL; }
 	public FilterMode getAllFiltersB() { return FilterMode.ALL_B; }
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getEnabled().get(), getLevel().get(), getStrip().get(), getStrictLosslessness().get(),
+				getReuse().get(), getFilterMode().get(), getPaletteSortStrategies().get(),
+				getDeflateMultithreading().get(), getDeflateMultithreadingThreads().get());
+	}
 
 	public enum FilterMode {
 		DEFAULT, ALL, ALL_B;
