@@ -2,6 +2,7 @@ package dev.rdh.imag.core.passes;
 
 import org.gradle.api.provider.Property;
 
+import dev.rdh.imag.ImagPlugin;
 import dev.rdh.imag.config.ImagExtension;
 import dev.rdh.imag.config.optimizations.JsonConfig;
 import dev.rdh.imag.core.FileProcessor;
@@ -15,7 +16,8 @@ public class JsonMinifier implements FileProcessor {
 	private final JsonConfig config;
 	private final Property<Boolean> imagEnabled;
 
-	public JsonMinifier(ImagExtension config) {
+	public JsonMinifier() {
+		ImagExtension config = ImagPlugin.getProject().getExtensions().getByType(ImagExtension.class);
 		this.imagEnabled = config.getEnabled();
 		JsonConfig json = config.getJson();
 		List<String> extensions = new ArrayList<>(json.getExtraFileExtensions().get());

@@ -15,7 +15,7 @@ public final class CacheManager {
 	private CacheManager() {}
 
 	private static final Path MAIN_CACHE_DIR = ImagPlugin.getProject().getRootDir().toPath().resolve(".gradle").resolve("imag-cache");
-	private static Path CACHE_DIR;
+	private static final Path CACHE_DIR;
 
 	private static void makeCacheDir() {
 		if(Files.exists(CACHE_DIR)) return;

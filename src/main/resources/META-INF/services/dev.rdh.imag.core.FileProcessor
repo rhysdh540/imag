@@ -1,0 +1,3 @@
+dev.rdh.imag.core.passes.Ect
+dev.rdh.imag.core.passes.JsonMinifier
+dev.rdh.imag.core.passes.Oxipng

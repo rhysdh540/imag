@@ -10,6 +10,7 @@ base.archivesName = "imag"
 
 repositories {
     mavenCentral()
+    maven("https://repo.gradle.org/gradle/libs-releases-local/")
 }
 
 dependencies {

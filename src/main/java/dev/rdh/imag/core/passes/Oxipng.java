@@ -2,6 +2,7 @@ package dev.rdh.imag.core.passes;
 
 import org.gradle.api.provider.Property;
 
+import dev.rdh.imag.ImagPlugin;
 import dev.rdh.imag.Util;
 import dev.rdh.imag.config.ImagExtension;
 import dev.rdh.imag.config.optimizations.png.OxipngConfig;
@@ -17,7 +18,8 @@ public class Oxipng implements FileProcessor {
 	private final Property<Boolean> pngEnabled;
 	private final Property<Boolean> imagEnabled;
 
-	public Oxipng(ImagExtension config) {
+	public Oxipng() {
+		ImagExtension config = ImagPlugin.getProject().getExtensions().getByType(ImagExtension.class);
 		this.config = config.getPng().getOxipng();
 		this.imagEnabled = config.getEnabled();
 		this.pngEnabled = config.getEnabled();

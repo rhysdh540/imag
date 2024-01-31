@@ -49,6 +49,18 @@ public abstract class ImagExtension extends DisableableConfig {
 		action.execute(getPng());
 	}
 
+	@Nested
+	public abstract LoggingConfig getLogging();
+
+	public void logging(Action<LoggingConfig> action) {
+		action.execute(getLogging());
+	}
+
+	{
+		getCache().convention(true);
+		getFinalizeAfter().convention("assemble");
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(getEnabled().get(), getCache().get(), getJson(), getPng());

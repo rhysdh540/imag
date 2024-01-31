@@ -2,6 +2,7 @@ package dev.rdh.imag.core.passes;
 
 import org.gradle.api.provider.Property;
 
+import dev.rdh.imag.ImagPlugin;
 import dev.rdh.imag.Util;
 import dev.rdh.imag.config.ImagExtension;
 import dev.rdh.imag.config.optimizations.png.EctConfig;
@@ -16,7 +17,8 @@ public class Ect implements FileProcessor {
 	private final Property<Boolean> imagEnabled;
 	private final EctConfig config;
 
-	public Ect(ImagExtension config) {
+	public Ect() {
+		ImagExtension config = ImagPlugin.getProject().getExtensions().getByType(ImagExtension.class);
 		this.pngEnabled = config.getPng().getEnabled();
 		this.imagEnabled = config.getEnabled();
 		this.config = config.getPng().getEct();
@@ -39,13 +41,13 @@ public class Ect implements FileProcessor {
 		if(config.getFilterMode().get() != EctConfig.FilterMode.DEFAULT) {
 			args.add("--" + config.getFilterMode().get());
 		}
-		if(config.getPaletteSortStrategies().get() != 0) {
+		if(config.getPaletteSortStrategies().get() != -1) {
 			args.add("--pal_sort=" + config.getPaletteSortStrategies().get());
 		}
 		if(config.getDeflateMultithreading().get()) {
 			args.add("--mt-deflate");
 		}
-		if(config.getDeflateMultithreadingThreads().get() != 0) {
+		if(config.getDeflateMultithreadingThreads().get() != -1) {
 			args.add("--mt-deflate=" + config.getDeflateMultithreadingThreads().get());
 		}
 

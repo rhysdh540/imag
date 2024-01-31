@@ -13,17 +13,12 @@ import dev.rdh.imag.Util;
 import dev.rdh.imag.config.ImagExtension;
 import dev.rdh.imag.core.CacheManager;
 import dev.rdh.imag.core.FileProcessor;
-import dev.rdh.imag.core.passes.Ect;
-import dev.rdh.imag.core.passes.JsonMinifier;
-import dev.rdh.imag.core.passes.Oxipng;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.ServiceLoader;
 import java.util.function.Supplier;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -74,8 +69,9 @@ public class ImagTask extends DefaultTask {
 		}
 		logger.lifecycle("Minifying " + jar.getName());
 		logger.lifecycle("Original size: " + formatBytes(jar.length()));
-		logger.quiet("Hash: " + Util.hash(project.getExtensions().findByType(ImagExtension.class)));
-		logger.quiet("Hash: " + Util.hash(project.getExtensions().findByType(ImagExtension.class)));
+		if(config.getLogging().getPrintHash().get()) {
+			logger.lifecycle("Hash: " + Util.hash(project.getExtensions().getByType(ImagExtension.class)));
+		}
 
 		Directory tempDir = project.getLayout().getBuildDirectory().get().dir("imag").dir(jar.getName());
 		if(tempDir.getAsFile().exists()) {
@@ -86,11 +82,7 @@ public class ImagTask extends DefaultTask {
 			spec.into(tempDir);
 		});
 
-		List<FileProcessor> processors = Arrays.asList(
-				new JsonMinifier(config),
-				new Ect(config),
-				new Oxipng(config)
-		);
+		ServiceLoader<FileProcessor> processors = ServiceLoader.load(FileProcessor.class);
 
 		for(File file : tempDir.getAsFileTree()) {
 			if(!file.isFile()) continue;
@@ -108,13 +100,17 @@ public class ImagTask extends DefaultTask {
 					for(FileProcessor processor : processors) {
 						if(processor.shouldProcess(file)) {
 							processedOnce = true;
-							logger.info("Processing " + file.getName() + " with " + processor.getClass().getSimpleName());
+							if(config.getLogging().getPrintFiles().get()) {
+								logger.info("Processing " + file.getName() + " with " + processor.getClass().getSimpleName());
+							}
 							processed = processor.process(processed);
 						}
 					}
 
 					if(processedOnce) {
-						logger.lifecycle("Processed " + file.getName() + " (" + formatBytes(contents.length - processed.length) + " saved)");
+						if(config.getLogging().getPrintFiles().get()) {
+							logger.lifecycle("Processed " + file.getName() + " (" + formatBytes(contents.length - processed.length) + " smaller)");
+						}
 						CacheManager.cache(processed, contents);
 					}
 					contents = processed;
