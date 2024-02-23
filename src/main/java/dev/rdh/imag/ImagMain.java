@@ -7,7 +7,6 @@ import dev.rdh.imag.process.Zopfli;
 import java.io.File;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,16 +29,19 @@ public class ImagMain {
 				File file = new File(arg);
 				if(!file.exists()) {
 					System.out.println("File not found: " + arg);
+				} else {
+					files.add(file);
 				}
-				files.add(file);
 			}
 
 			if(arg.equals("--help") || arg.equals("-h")) {
-				System.out.println("Usage: imag [options] <file1.png> <file2.png> ...");
-				System.out.println("Options:");
-				System.out.println("  -i, --iterations=<n>   Number of Zopfli iterations to run (default: based on file size)");
-				System.out.println("  -t, --threads=<n>      Number of threads to use (default: number of cores)");
-				System.out.println("  -b, --brute(-force)    Try all PNG filter modes, including brute force strategies (default: false)");
+				System.out.println("""
+						Usage: imag [options] <file1.png> <file2.png> ...
+						Options:
+						  -i, --iterations=<n>   Number of Zopfli iterations to run (default: based on file size)
+						  -t, --threads=<n>      Number of threads to use (default: number of cores)
+						  -b, --brute(-force)    Try all PNG filter modes, including brute force strategies (default: false)
+						""");
 				return;
 			}
 
@@ -49,7 +51,11 @@ public class ImagMain {
 
 			if(arg.startsWith("--iterations=") || arg.startsWith("-i=")) {
 				try {
-					iterations = Integer.parseInt(arg.split("=")[1]);
+					int temp = Integer.parseInt(arg.split("=")[1]);
+					if(temp < 0) {
+						throw new Exception();
+					}
+					iterations = temp;
 				} catch(Exception e) {
 					System.out.println("Invalid number of iterations: " + arg.split("=")[1]);
 					return;
@@ -70,12 +76,13 @@ public class ImagMain {
 		}
 
 		if(files.isEmpty()) {
-			System.out.println("No files specified");
+			System.out.println("No valid files specified");
 			return;
 		}
 
 		if(threads == -1) {
-			threads = Math.min(Runtime.getRuntime().availableProcessors(), files.size());
+			threads = Math.min(Runtime.getRuntime().availableProcessors() / 2, files.size());
+			threads = Math.max(threads, 1);
 		}
 
 		files.sort(Comparator.comparingLong(File::length).reversed());
@@ -84,6 +91,8 @@ public class ImagMain {
 
 		final int originalFiles = queue.size();
 		final long originalSize = queue.stream().mapToLong(File::length).sum();
+
+		System.loadLibrary("imag");
 
 		LinkedHashMap<String, UnaryOperator<byte[]>> processors = new LinkedHashMap<>(1);
 		processors.put("oxipng", Oxipng::process);
@@ -102,18 +111,30 @@ public class ImagMain {
 		long start = System.currentTimeMillis();
 		System.out.print("\033[?25l\033[H\033[2J");
 
-		Thread shutdownHook = new Thread(() -> System.out.println("\033[?25hInterrupted, stopping..."));
+		Thread shutdownHook = new Thread(() -> System.out.println("\033[?25h\rInterrupted, stopping..."));
 		Runtime.getRuntime().addShutdownHook(shutdownHook);
 
-		do {
+		while(true) {
 			StringBuilder sb = new StringBuilder();
-			sb.append("\033[H");
+			sb.append("\033[H\033[2J");
 			sb.append("Files remaining: ").append(queue.size()).append("/").append(originalFiles).append("\n");
 			for(ImagWorker worker : workers) {
 				sb.append("Worker ").append(worker.getNumber()).append(": ").append(worker.getStatus()).append(" ".repeat(20)).append("\n");
 			}
 			System.out.print(sb);
-		} while(!Arrays.stream(workers).allMatch(ImagWorker::isIdle));
+
+			boolean done = true;
+			for(ImagWorker worker : workers) {
+				if(!worker.isIdle()) {
+					done = false;
+					break;
+				}
+			}
+			if(done) break;
+
+			try { Thread.sleep(100); }
+			catch(InterruptedException ignored) {}
+		}
 
 		for(ImagWorker worker : workers) {
 			worker.stop();

@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class Zopfli {
 	private static final String[] BASE = {"zopflipng", "-y", "--filters=p"};
@@ -18,30 +19,45 @@ public class Zopfli {
 	}
 
 	public static byte[] process(byte[] input, int iterations) {
-		try {
-			if(iterations == -1) { // dynamically choose iterations based on file size
-				iterations = ITERATION_MAP.entrySet().stream()
-						.filter(e -> e.getKey() > input.length)
-						.findFirst()
-						.orElseThrow()
-						.getValue();
+		if(iterations < 0) { // dynamically choose iterations based on file size
+			for(Entry<Long, Integer> e : ITERATION_MAP.entrySet()) {
+				if(e.getKey() > input.length) {
+					iterations = e.getValue();
+					break;
+				}
 			}
 
-			File temp = File.createTempFile(String.valueOf(Arrays.hashCode(input)), ".png");
-			temp.deleteOnExit();
-			Files.write(temp.toPath(), input);
-			ProcessBuilder pb = new ProcessBuilder(BASE)
-					.redirectOutput(ProcessBuilder.Redirect.PIPE);
-			pb.command().add("--iterations=" + iterations);
-			pb.command().add(temp.getAbsolutePath());
-			pb.command().add(temp.getAbsolutePath());
+			if(iterations == -1) {
+				throw new AssertionError();
+			}
+		}
 
-			Process p = pb.start();
-			p.waitFor();
-
-			return Files.readAllBytes(temp.toPath());
-		} catch(Exception e) {
-			return input;
+		try {
+			return process0(input, iterations);
+		} catch(Throwable t) {
+			try {
+				return processCli(input, iterations);
+			} catch(Throwable t2) {
+				return input;
+			}
 		}
 	}
+
+	private static byte[] processCli(byte[] input, int iterations) throws Throwable {
+		File temp = File.createTempFile(String.valueOf(Arrays.hashCode(input)), ".png");
+		temp.deleteOnExit();
+		Files.write(temp.toPath(), input);
+		ProcessBuilder pb = new ProcessBuilder(BASE)
+				.redirectOutput(ProcessBuilder.Redirect.PIPE);
+		pb.command().add("--iterations=" + iterations);
+		pb.command().add(temp.getAbsolutePath());
+		pb.command().add(temp.getAbsolutePath());
+
+		Process p = pb.start();
+		p.waitFor();
+
+		return Files.readAllBytes(temp.toPath());
+	}
+
+	private static native byte[] process0(byte[] input, int iterations) throws Throwable;
 }

@@ -1,0 +1,20 @@
+[package]
+name = "imag"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]
+
+[build-dependencies]
+cc = "1.0.86"
+bindgen = "0.69.4"
+walkdir = "2.4.0"
+
+[dependencies]
+oxipng = { version = "9.0.0", default-features = false, features = ["parallel", "zopfli", "filetime"] }
+jni = "0.21.1"
+jni_fn = "0.1.2"
