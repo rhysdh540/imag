@@ -1,15 +1,21 @@
 plugins {
-    `java-gradle-plugin`
+    application
+    cpp
 }
 
 group = "dev.rdh"
-version = "0.0"
+version = "0.1"
 base.archivesName = "imag"
 
-repositories {
-    mavenCentral()
+val mainClassName = "dev.rdh.imag.ImagMain"
+
+application {
+    mainClass = mainClassName
+    applicationDefaultJvmArgs = listOf("-Djava.library.path=build/libs")
 }
 
-dependencies {
-    implementation(gradleApi())
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = mainClassName
+    }
 }
